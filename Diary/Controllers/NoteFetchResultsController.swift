@@ -1,0 +1,65 @@
+//
+//  NoteFetchResultsController.swift
+//  Diary
+//
+//  Created by Cristian Sedano Arenas on 30/12/2019.
+//  Copyright © 2019 Cristian Sedano Arenas. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import CoreData
+
+class NoteFetchResultsController: NSFetchedResultsController<Note>, NSFetchedResultsControllerDelegate {
+    
+    private let tableView: UITableView
+    private var nbOfSections = 0
+    
+    // Initiate a CoreData request on Notes and associate a tableview to it
+    init(fetchRequest: NSFetchRequest<Note>, managedObjectContext: NSManagedObjectContext, tableView: UITableView) {
+        self.tableView = tableView
+        
+        super.init(fetchRequest: fetchRequest, managedObjectContext: managedObjectContext, sectionNameKeyPath: nil, cacheName: nil)
+        
+        self.delegate = self
+        
+        tryFetch()
+    }
+    
+    // perform the fetch operation
+    func tryFetch() {
+        do {
+            try performFetch()
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    // MARK: - FetchResultController Delegate
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.beginUpdates()
+        nbOfSections = self.sections!.count
+    }
+    
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        
+        switch type {
+        case .insert:
+            guard let newIndexPath = newIndexPath else { return }
+            tableView.insertRows(at: [newIndexPath], with: .automatic)
+            tableView.reloadData()
+        case .delete:
+            guard let indexPath = indexPath else { return }
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+        case .update, .move:
+            guard let indexPath = indexPath else { return }
+           tableView.reloadRows(at: [indexPath], with: .automatic)
+        }
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.endUpdates()
+    }
+    
+}
